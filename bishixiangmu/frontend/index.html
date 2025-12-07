@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI增强型任务管理系统</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome 图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 自定义样式 -->
+    <link rel="stylesheet" href="style.css">
+    <!-- 添加 favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- 导航栏 -->
+    <nav class="bg-white shadow-lg">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="text-2xl">🤖</div>
+                    <h1 class="text-xl font-bold text-gray-800">AI任务管理系统</h1>
+                    <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">v1.0</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div id="stats" class="text-sm text-gray-600">
+                        <i class="fas fa-spinner fa-spin"></i> 加载中...
+                    </div>
+                    <button onclick="refreshAll()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                        <i class="fas fa-sync-alt mr-2"></i>刷新
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- 统计卡片 -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+            <div class="stat-card bg-white p-6 rounded-xl shadow-md">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">总任务数</p>
+                        <p id="total-tasks" class="text-2xl font-bold">0</p>
+                    </div>
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <i class="fas fa-tasks text-blue-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card bg-white p-6 rounded-xl shadow-md">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">已完成</p>
+                        <p id="completed-tasks" class="text-2xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card bg-white p-6 rounded-xl shadow-md">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">进行中</p>
+                        <p id="inprogress-tasks" class="text-2xl font-bold text-yellow-600">0</p>
+                    </div>
+                    <div class="p-3 bg-yellow-100 rounded-lg">
+                        <i class="fas fa-spinner text-yellow-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card bg-white p-6 rounded-xl shadow-md">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">完成率</p>
+                        <p id="completion-rate" class="text-2xl font-bold text-purple-600">0%</p>
+                    </div>
+                    <div class="p-3 bg-purple-100 rounded-lg">
+                        <i class="fas fa-chart-line text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 新增：优先级分布卡片 -->
+            <div class="stat-card bg-white p-6 rounded-xl shadow-md">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">优先级分布</p>
+                        <div id="priority-stats" class="mt-2 space-y-1">
+                            <div class="flex items-center text-xs space-x-2">
+                                <span class="w-3 h-3 bg-red-500 rounded-full"></span>
+                                <span class="text-gray-600">紧急:</span>
+                                <span id="priority-1-count" class="font-bold">0</span>
+                            </div>
+                            <div class="flex items-center text-xs space-x-2">
+                                <span class="w-3 h-3 bg-orange-500 rounded-full"></span>
+                                <span class="text-gray-600">高:</span>
+                                <span id="priority-2-count" class="font-bold">0</span>
+                            </div>
+                            <div class="flex items-center text-xs space-x-2">
+                                <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                                <span class="text-gray-600">中:</span>
+                                <span id="priority-3-count" class="font-bold">0</span>
+                            </div>
+                            <div class="flex items-center text-xs space-x-2">
+                                <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
+                                <span class="text-gray-600">低:</span>
+                                <span id="priority-4-count" class="font-bold">0</span>
+                            </div>
+                            <div class="flex items-center text-xs space-x-2">
+                                <span class="w-3 h-3 bg-gray-500 rounded-full"></span>
+                                <span class="text-gray-600">极低:</span>
+                                <span id="priority-5-count" class="font-bold">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg">
+                        <i class="fas fa-chart-pie text-purple-600 text-xl"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- 左侧：添加任务 -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- 常规添加 -->
+                <div class="card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center mb-6">
+                        <div class="p-2 bg-blue-100 rounded-lg mr-3">
+                            <i class="fas fa-plus text-blue-600"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-800">添加新任务</h2>
+                    </div>
+
+                    <form id="task-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">任务标题 *</label>
+                            <input type="text" id="task-title"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                   placeholder="请输入任务标题" required>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">任务描述</label>
+                            <textarea id="task-description" rows="3"
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="请输入任务描述（可选）"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">截止日期</label>
+                                <input type="date" id="task-due-date"
+                                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">优先级</label>
+                                <select id="task-priority"
+                                        class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="1">🔥 紧急 (1)</option>
+                                    <option value="2">⚠️ 高 (2)</option>
+                                    <option value="3" selected>⚡ 中 (3)</option>
+                                    <option value="4">📋 低 (4)</option>
+                                    <option value="5">💤 极低 (5)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">状态</label>
+                            <select id="task-status"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="pending">⏳ 待处理</option>
+                                <option value="in_progress">🚀 进行中</option>
+                                <option value="completed">✅ 已完成</option>
+                            </select>
+                        </div>
+
+                        <button type="submit"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                            <i class="fas fa-plus-circle mr-2"></i>
+                            创建任务
+                        </button>
+                    </form>
+                </div>
+
+                <!-- AI智能添加 -->
+                <div class="card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex items-center mb-6">
+                        <div class="p-2 bg-purple-100 rounded-lg mr-3">
+                            <i class="fas fa-robot text-purple-600"></i>
+                        </div>
+                        <h2 class="text-xl font-semibold text-gray-800">AI智能添加</h2>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">用自然语言描述</label>
+                            <textarea id="ai-input" rows="3"
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                      placeholder="例如：明天下午3点开会讨论项目进度，这个任务很重要"></textarea>
+                            <p class="text-sm text-gray-500 mt-1">AI将自动解析时间、优先级和任务信息</p>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <button onclick="parseWithAI()"
+                                    class="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                                <i class="fas fa-magic mr-2"></i>
+                                AI智能解析
+                            </button>
+
+                            <button onclick="createFromAI()"
+                                    class="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                                <i class="fas fa-bolt mr-2"></i>
+                                直接创建
+                            </button>
+                        </div>
+
+                        <div id="ai-result" class="hidden p-4 bg-purple-50 border border-purple-200 rounded-lg">
+                            <h3 class="font-medium text-purple-800 mb-2">🤖 AI解析结果：</h3>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex">
+                                    <span class="text-gray-600 w-16">标题：</span>
+                                    <span id="ai-title" class="font-medium"></span>
+                                </div>
+                                <div class="flex">
+                                    <span class="text-gray-600 w-16">描述：</span>
+                                    <span id="ai-description" class="flex-1"></span>
+                                </div>
+                                <div class="flex">
+                                    <span class="text-gray-600 w-16">截止：</span>
+                                    <span id="ai-due-date"></span>
+                                </div>
+                                <div class="flex">
+                                    <span class="text-gray-600 w-16">优先级：</span>
+                                    <span id="ai-priority"></span>
+                                </div>
+                                <div class="flex">
+                                    <span class="text-gray-600 w-16">状态：</span>
+                                    <span id="ai-status"></span>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex space-x-2">
+                                <button onclick="useAIResult()"
+                                        class="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded transition duration-200">
+                                    <i class="fas fa-check mr-1"></i>使用此结果
+                                </button>
+                                <button onclick="clearAIResult()"
+                                        class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 py-2 px-4 rounded transition duration-200">
+                                    <i class="fas fa-times mr-1"></i>清空
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧：任务列表 -->
+            <div class="lg:col-span-2">
+                <div class="card bg-white rounded-xl shadow-md p-6">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-4 sm:space-y-0">
+                        <div class="flex items-center">
+                            <div class="p-2 bg-blue-100 rounded-lg mr-3">
+                                <i class="fas fa-list-check text-blue-600"></i>
+                            </div>
+                            <h2 class="text-xl font-semibold text-gray-800">任务列表</h2>
+                            <span id="task-count" class="ml-3 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm">0 个任务</span>
+                        </div>
+
+                        <div class="flex space-x-2 w-full sm:w-auto">
+                            <select id="status-filter" onchange="loadTasks()"
+                                    class="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">全部状态</option>
+                                <option value="pending">待处理</option>
+                                <option value="in_progress">进行中</option>
+                                <option value="completed">已完成</option>
+                            </select>
+
+                            <select id="priority-filter" onchange="loadTasks()"
+                                    class="flex-1 sm:flex-none px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">全部优先级</option>
+                                <option value="1">紧急</option>
+                                <option value="2">高</option>
+                                <option value="3">中</option>
+                                <option value="4">低</option>
+                                <option value="5">极低</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 任务列表容器 -->
+                    <div id="tasks-container" class="space-y-4">
+                        <div class="text-center py-12">
+                            <div class="inline-block p-4 bg-gray-100 rounded-full mb-4">
+                                <i class="fas fa-tasks text-gray-400 text-3xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-700 mb-2">暂无任务</h3>
+                            <p class="text-gray-500 mb-6">开始添加您的第一个任务吧！</p>
+                            <button onclick="scrollToForm()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                                <i class="fas fa-plus mr-2"></i>添加任务
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 加载指示器 -->
+                    <div id="loading" class="hidden text-center py-8">
+                        <i class="fas fa-spinner fa-spin text-2xl text-blue-600 mb-3"></i>
+                        <p class="text-gray-600">加载任务中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript文件 -->
+    <script src="app.js"></script>
+
+    <script>
+        // 表单提交处理
+        document.getElementById('task-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            createTask();
+        });
+
+        // 页面加载后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 设置明天为默认日期
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('task-due-date').value = tomorrow.toISOString().split('T')[0];
+
+            // 加载初始数据
+            loadTasks();
+            loadStats();
+        });
+
+        // 刷新所有数据
+        function refreshAll() {
+            loadTasks();
+            loadStats();
+        }
+
+        // 滚动到表单
+        function scrollToForm() {
+            document.getElementById('task-title').scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('task-title').focus();
+        }
+    </script>
+</body>
+</html>
